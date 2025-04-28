@@ -1,27 +1,26 @@
-package calculator;
+// Đặt package nếu bạn tổ chức theo thư mục, còn không thì xóa dòng này
+package calculator1;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.util.ArrayList;
-import javax.swing.*;
 
 public class Calculator extends JFrame {
-    private JTextField displayField;
-    private JTextArea historyArea;
-    private String currentInput = "";
-    private String operator = "";
-    private double num1 = 0;
-    private ArrayList<String> history = new ArrayList<>();
-    private boolean startNewNumber = true;
-    private boolean afterEquals = false;
+    private JTextField displayField;     // Ô hiển thị kết quả
+    private JTextArea historyArea;       // Khu vực hiển thị lịch sử tính toán
+    private StringBuilder currentInput = new StringBuilder();  // Dữ liệu người dùng nhập
+    private ArrayList<String> history = new ArrayList<>();     // Lưu lịch sử các phép tính
 
     public Calculator() {
-        setTitle("Simple Calculator");
+        setTitle("Máy tính đơn giản");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
-        setSize(1366, 768);
+        setSize(500, 600);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
+        // Thiết lập ô hiển thị kết quả
         displayField = new JTextField("0");
         displayField.setFont(new Font("Arial", Font.BOLD, 30));
         displayField.setEditable(false);
@@ -30,378 +29,186 @@ public class Calculator extends JFrame {
         displayField.setHorizontalAlignment(JTextField.RIGHT);
         add(displayField, BorderLayout.NORTH);
 
-        historyArea = new JTextArea(10, 20);
+        // Thiết lập khu vực lịch sử
+        historyArea = new JTextArea();
         historyArea.setFont(new Font("Arial", Font.PLAIN, 16));
         historyArea.setEditable(false);
         historyArea.setBackground(Color.BLACK);
         historyArea.setForeground(Color.WHITE);
         add(new JScrollPane(historyArea), BorderLayout.EAST);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(5, 5, 5, 5));
-        buttonPanel.setBackground(Color.DARK_GRAY);
-
+        // Các nút chức năng
         String[] buttons = {
-            "C", "√ ", "/", "<=", "",
-            "7", "8", "9", "*", "",
-            "4", "5", "6", "-", "",
-            "1", "2", "3", "+", "",
-            "%", "0", ".", "^", "="
+            "7", "8", "9", "/", "C",
+            "4", "5", "6", "*", "<=",
+            "1", "2", "3", "-", "√",
+            "0", ".", "=", "+", "%",
+            "(", ")", "^", "Copy", "Paste"
         };
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(6, 5, 5, 5));
+        buttonPanel.setBackground(Color.DARK_GRAY);
 
         for (String text : buttons) {
             JButton button = new JButton(text);
-            button.setFont(new Font("Arial", Font.PLAIN, 20));
+            button.setFont(new Font("Arial", Font.BOLD, 20));
+            button.setBackground(Color.BLACK);
+            button.setForeground(Color.WHITE);
+
+            // Tô màu đặc biệt cho nút C, Copy, Paste
             if (text.equals("C") || text.equals("<=")) {
                 button.setBackground(Color.RED);
-            } else if (text.equals("=")) {
-                button.setBackground(Color.GRAY);
-            } else if (text.equals("√ ") || text.equals("+") || text.equals(".") || text.equals("-") ||
-                      text.equals("*") || text.equals("/") || text.equals("%") || text.equals("^")) {
-                button.setBackground(Color.BLACK);
-            } else if (text.equals("")) {
-                button.setBackground(Color.DARK_GRAY);
-                button.setEnabled(false);
-            } else {
-                button.setBackground(Color.BLACK);
             }
-            button.setForeground(Color.WHITE);
+            if (text.equals("Copy") || text.equals("Paste")) {
+                button.setBackground(Color.GRAY);
+            }
+
             button.addActionListener(new ButtonClick());
             buttonPanel.add(button);
         }
 
         add(buttonPanel, BorderLayout.CENTER);
+
         setVisible(true);
     }
 
+    // Xử lý các sự kiện nút bấm
     private class ButtonClick implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             String command = e.getActionCommand();
 
-            try {
-                // Kiểm tra nếu là số hoặc dấu thập phân
-                if (command.matches("[0-9]") || command.equals(".")) {
-                    handleNumberOrDecimal(command);
-                } 
-                // Kiểm tra nếu là dấu âm ở đầu
-                else if (command.equals("-") && (currentInput.isEmpty() || startNewNumber)) {
-                    handleNegativeSign(); // Xử lý dấu âm
-                } 
-                // Kiểm tra nếu là các toán tử cơ bản (+, -, *, /)
-                else if (command.equals("+") || command.equals("-") || 
-                         command.equals("*") || command.equals("/")) {
-                    handleBasicOperator(command);
-                } 
-                // Kiểm tra nếu là toán tử lũy thừa (^)
-                else if (command.equals("^")) {
-                    handlePowerOperator();
-                } 
-                // Kiểm tra nếu là căn bậc hai (√)
-                else if (command.equals("√ ")) {
-                    handleSquareRoot();
-                } 
-                // Kiểm tra nếu là phần trăm (%)
-                else if (command.equals("%")) {
-                    handlePercentage();
-                } 
-                // Kiểm tra nếu là dấu bằng (=)
-                else if (command.equals("=")) {
-                    handleEquals();
-                } 
-                // Kiểm tra nếu là nút xóa (C)
-                else if (command.equals("C")) {
-                    handleClear(); // Gọi phương thức xóa toàn bộ
-                } else if (command.equals("<=")) {
-                    handleBackspace(); // Gọi phương thức xóa ký tự cuối
-                }
-            } catch (NumberFormatException ex) {
-                // Xử lý lỗi định dạng số
-                displayField.setText("Lỗi: Định dạng dữ liệu nhập vào không hợp lệ");
-                reset();
-            } catch (ArithmeticException ex) {
-                // Xử lý lỗi toán học (chia cho 0, căn bậc hai số âm, v.v.)
-                displayField.setText("Lỗi: " + ex.getMessage());
-                reset();
-            } catch (Exception ex) {
-                // Xử lý lỗi khác (tràn số, v.v.)
-                displayField.setText("Lỗi: tràn bộ nhớ or thao tác không hợp lệ");
-                reset();
+            switch (command) {
+                case "C":
+                    clear();          // Xóa toàn bộ
+                    break;
+                case "<=":
+                    backspace();      // Xóa ký tự cuối
+                    break;
+                case "=":
+                    evaluate();       // Tính toán biểu thức
+                    break;
+                case "√":
+                    insertSquareRoot(); // Thêm sqrt vào biểu thức
+                    break;
+                case "Copy":
+                    copyToClipboard(); // Copy kết quả
+                    break;
+                case "Paste":
+                    pasteFromClipboard(); // Paste vào ô nhập
+                    break;
+                default:
+                    appendInput(command); // Thêm ký tự bình thường
             }
         }
+    }
 
-        // Xử lý khi người dùng nhập số hoặc dấu thập phân
-        private void handleNumberOrDecimal(String command) {
-            if (afterEquals) {
-                currentInput = ""; // Xóa đầu vào sau khi nhấn "="
-                afterEquals = false;
-            }
-            if (startNewNumber) {
-                if (!currentInput.equals("-")) { // Giữ lại dấu âm nếu có
-                    currentInput = ""; // Bắt đầu số mới
-                }
-                startNewNumber = false;
-            }
-            if (command.equals(".") && (currentInput.contains(".") || currentInput.isEmpty())) {
-                return; // Không cho phép nhập nhiều dấu "."
-            }
-            if (currentInput.startsWith("√") && command.equals("-")) {
-                // Cho phép nhập dấu âm sau dấu căn
-                if (currentInput.equals("√")) {
-                    currentInput += "-";
-                    displayField.setText(currentInput);
-                } else {
-                    displayField.setText("Lỗi: Không thể căn bậc hai số âm"); // Hiển thị lỗi nếu nhập dấu âm không hợp lệ
-                }
-                return;
-            }
-            currentInput += command; // Thêm số hoặc dấu "." vào đầu vào
-            displayField.setText(currentInput); // Hiển thị đầu vào
+    // Thêm ký tự vào biểu thức
+    private void appendInput(String value) {
+        if (displayField.getText().equals("0")) {
+            currentInput.setLength(0);
         }
+        currentInput.append(value);
+        displayField.setText(currentInput.toString());
+    }
 
-        // Xử lý khi người dùng nhập dấu âm
-        private void handleNegativeSign() {
-            if (currentInput.isEmpty()) {
-                // Nếu đầu vào rỗng, thêm dấu âm
-                currentInput = "-";
-                displayField.setText(currentInput);
-                startNewNumber = false; // Cho phép nhập tiếp số sau dấu âm
-            } else if (currentInput.equals("-")) {
-                // Nếu đã có dấu âm, xóa dấu âm
-                currentInput = "";
+    // Xóa toàn bộ biểu thức
+    private void clear() {
+        currentInput.setLength(0);
+        displayField.setText("0");
+    }
+
+    // Xóa ký tự cuối
+    private void backspace() {
+        if (currentInput.length() > 0) {
+            currentInput.deleteCharAt(currentInput.length() - 1);
+            if (currentInput.length() == 0) {
                 displayField.setText("0");
             } else {
-                // Nếu đầu vào không rỗng, thêm hoặc thay đổi dấu âm
-                if (currentInput.startsWith("-")) {
-                    currentInput = currentInput.substring(1); // Xóa dấu âm
-                } else {
-                    currentInput = "-" + currentInput; // Thêm dấu âm
-                }
-                displayField.setText(currentInput);
+                displayField.setText(currentInput.toString());
             }
         }
+    }
 
-        // Xử lý các toán tử cơ bản (+, -, *, /)
-        private void handleBasicOperator(String command) {
-            if (!currentInput.isEmpty()) {
-                if (!operator.isEmpty() && !startNewNumber) {
-                    // Thực hiện phép tính nếu đã có toán tử trước đó
-                    double num2 = Double.parseDouble(currentInput);
-                    double result = performOperation(num2);
-                    String calc = formatNumber(num1) + " " + operator + " " + formatNumber(num2) + " = " + formatResult(result);
-                    displayResult(result, calc);
-                    num1 = result; // Cập nhật kết quả làm số thứ nhất
-                } else {
-                    num1 = Double.parseDouble(currentInput); // Lưu số thứ nhất
-                }
-                operator = command; // Lưu toán tử
-                currentInput = ""; // Xóa đầu vào
-                startNewNumber = true; // Bắt đầu số mới
-                afterEquals = false;
-            } else if (!operator.isEmpty()) {
-                operator = command; // Cho phép thay đổi toán tử
-            }
+    // Thêm ký hiệu căn bậc hai vào biểu thức
+    private void insertSquareRoot() {
+        currentInput.append("sqrt(");
+        displayField.setText(currentInput.toString());
+    }
+
+    // Copy kết quả vào clipboard
+    private void copyToClipboard() {
+        String result = displayField.getText();
+        StringSelection selection = new StringSelection(result);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, null);
+    }
+
+    // Paste dữ liệu từ clipboard
+    private void pasteFromClipboard() {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        try {
+            String pasteText = (String) clipboard.getData(DataFlavor.stringFlavor);
+            currentInput.append(pasteText);
+            displayField.setText(currentInput.toString());
+        } catch (Exception ex) {
+            displayField.setText("Lỗi khi Paste");
         }
+    }
 
-        // Xử lý toán tử lũy thừa (^)
-        private void handlePowerOperator() {
-            if (!currentInput.isEmpty()) {
-                if (!operator.isEmpty() && !startNewNumber) {
-                    double num2 = Double.parseDouble(currentInput);
-                    double result = performOperation(num2);
-                    String calc = formatNumber(num1) + " " + operator + " " + formatNumber(num2) + " = " + formatResult(result);
-                    displayResult(result, calc);
-                    num1 = result;
-                } else {
-                    num1 = Double.parseDouble(currentInput);
-                }
-                operator = "^"; // Lưu toán tử lũy thừa
-                currentInput = "";
-                startNewNumber = true;
-                afterEquals = false;
-            }
+    // Tính toán biểu thức nhập vào
+    private void evaluate() {
+        try {
+            String input = currentInput.toString()
+                    .replaceAll("√", "sqrt")   // Hỗ trợ √ thay thành sqrt
+                    .replaceAll("%", "/100")   // Hỗ trợ %
+                    .replaceAll("\\^", "**");  // Hỗ trợ lũy thừa
+
+            // Sử dụng ScriptEngine để tính biểu thức
+            javax.script.ScriptEngine engine = new javax.script.ScriptEngineManager().getEngineByName("JavaScript");
+            Object resultObj = engine.eval(replaceSqrt(input));
+            String resultStr = resultObj.toString();
+
+            // Hiển thị kết quả
+            displayField.setText(resultStr);
+            history.add(input + " = " + resultStr);
+            updateHistory();
+
+            // Reset để tiếp tục nhập
+            currentInput.setLength(0);
+            currentInput.append(resultStr);
+
+        } catch (Exception ex) {
+            displayField.setText("Lỗi biểu thức");
         }
+    }
 
-        // Xử lý toán tử căn bậc hai (√)
-        private void handleSquareRoot() {
-            if (afterEquals || startNewNumber) {
-                // Nếu vừa nhấn "=" hoặc bắt đầu số mới, đặt lại trạng thái
-                currentInput = "";
-                afterEquals = false;
-                startNewNumber = false;
-            }
-
-            if (currentInput.isEmpty()) {
-                currentInput = "√"; // Hiển thị ký hiệu căn bậc hai
-                displayField.setText(currentInput);
-            } else if (currentInput.startsWith("√")) {
-                // Nếu đã có ký hiệu √, thực hiện phép tính
-                String numberStr = currentInput.substring(1); // Lấy phần số sau ký hiệu √
-                if (numberStr.isEmpty() || numberStr.equals("-")) {
-                    displayField.setText("Lỗi: Không thể căn bậc hai số âm"); // Lỗi nếu không có số hoặc số âm
-                    return;
-                }
-                double number = Double.parseDouble(numberStr);
-                if (number < 0) {
-                    displayField.setText("Lỗi: Không thể căn bậc hai số âm"); // Lỗi nếu số âm
-                    return;
-                }
-                double result = Math.sqrt(number); // Tính căn bậc hai
-                checkOverflow(result); // Kiểm tra tràn số
-                String calc = "√" + formatNumber(number) + " = " + formatResult(result);
-                displayResult(result, calc);
-                startNewNumber = true; // Bắt đầu số mới sau khi hiển thị kết quả
+    // Chuyển sqrt thành Math.sqrt trong JavaScript
+    private String replaceSqrt(String expr) {
+        StringBuilder replaced = new StringBuilder();
+        int len = expr.length();
+        for (int i = 0; i < len; i++) {
+            char c = expr.charAt(i);
+            if (c == 's' && expr.startsWith("sqrt(", i)) {
+                replaced.append("Math.sqrt(");
+                i += 4; // Bỏ qua "sqrt"
             } else {
-                displayField.setText("Lỗi: Định dạng không hợp lệ"); // Lỗi nếu định dạng không đúng
+                replaced.append(c);
             }
         }
-
-        // Xử lý nút phần trăm (%)
-        private void handlePercentage() {
-            if (currentInput.isEmpty()) {
-                displayField.setText("Lỗi: Không có dữ liệu đầu vào"); // Lỗi nếu không có đầu vào
-                return;
-            }
-            double number = Double.parseDouble(currentInput);
-            double result = number / 100; // Tính phần trăm
-            displayField.setText(formatResult(result)); // Hiển thị kết quả
-            currentInput = formatNumber(result); // Cập nhật đầu vào
-        }
-
-        // Xử lý nút dấu bằng (=)
-        private void handleEquals() {
-            if (currentInput.isEmpty()) {
-                displayField.setText("Lỗi: Dữ liệu nhập vào không đủ"); // Lỗi nếu đầu vào không đầy đủ
-                return;
-            }
-
-            try {
-                double result;
-                if (currentInput.startsWith("√")) {
-                    // Xử lý trường hợp căn bậc hai
-                    String numberStr = currentInput.substring(1); // Lấy phần số sau ký hiệu √
-                    if (numberStr.isEmpty()) {
-                        displayField.setText("Lỗi: Không có dữ liệu đầu vào"); // Lỗi nếu không có số
-                        return;
-                    }
-                    double number = Double.parseDouble(numberStr);
-                    if (number < 0) {
-                        displayField.setText("Lỗi: Không thể căn bậc hai số âm"); // Lỗi nếu số âm
-                        return;
-                    }
-                    result = Math.sqrt(number); // Tính căn bậc hai
-                    checkOverflow(result); // Kiểm tra tràn số
-                    String calc = "√" + formatNumber(number) + " = " + formatResult(result);
-                    displayResult(result, calc);
-                } else if (!operator.isEmpty()) {
-                    // Xử lý các phép toán khác
-                    double num2 = Double.parseDouble(currentInput);
-                    result = performOperation(num2); // Thực hiện phép tính
-                    displayResult(result, formatNumber(num1) + " " + operator + " " + formatNumber(num2) + " = " + formatResult(result));
-                } else {
-                    displayField.setText("Lỗi: Dữ liệu nhập vào không đủ"); // Lỗi nếu không có toán tử
-                    return;
-                }
-
-                num1 = result;
-                operator = "";
-                startNewNumber = true;
-                afterEquals = true; // Đặt trạng thái sau khi nhấn "="
-            } catch (ArithmeticException ex) {
-                displayField.setText("Lỗi: " + ex.getMessage());
-                reset();
-            }
-        }
-
-        // Thực hiện phép tính dựa trên toán tử
-        private double performOperation(double num2) {
-            switch (operator) {
-                case "+":
-                    return num1 + num2;
-                case "-":
-                    return num1 - num2;
-                case "*":
-                    return num1 * num2;
-                case "/":
-                    if (num2 == 0) {
-                        throw new ArithmeticException("Không thể chia cho 0"); // Lỗi chia cho 0
-                    }
-                    return num1 / num2;
-                case "^":
-                    return Math.pow(num1, num2); // Lũy thừa
-                default:
-                    throw new IllegalStateException("Unknown operator: " + operator);
-            }
-        }
+        return replaced.toString();
     }
 
-    private void reset() {
-        currentInput = "";
-        num1 = 0;
-        operator = "";
-        startNewNumber = true;
-        afterEquals = false;
-        displayField.setText("0"); // Đặt lại màn hình hiển thị
-    }
-
-    private String formatNumber(double number) {
-        if (number == (long) number) {
-            return String.valueOf((long) number);
-        }
-        return String.format("%.10f", number).replaceAll("0*$", "").replaceAll("\\.$", "");
-    }
-
-    private String formatResult(double result) {
-        checkOverflow(result);
-        return formatNumber(result);
-    }
-
-    private void checkOverflow(double result) {
-        if (Double.isInfinite(result) || Double.isNaN(result)) {
-            throw new ArithmeticException("tràn bộ nhớ");
-        }
-        if (Math.abs(result) > 1e308 || (result != 0 && Math.abs(result) < 1e-308)) {
-            throw new ArithmeticException("Số quá lớn/nhỏ");
-        }
-    }
-
-    private void displayResult(double result, String calc) {
-        displayField.setText(formatResult(result));
-        currentInput = formatNumber(result);
-        history.add(calc);
-        updateHistory();
-    }
-
+    // Cập nhật lịch sử tính toán
     private void updateHistory() {
         historyArea.setText("");
-        for (String calc : history) {
-            historyArea.append(calc + "\n");
+        for (String record : history) {
+            historyArea.append(record + "\n");
         }
     }
 
+    // Hàm main để chạy chương trình
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Calculator());
     }
-
-    private void handleBackspace() {
-        if (!currentInput.isEmpty()) {
-            currentInput = currentInput.substring(0, currentInput.length() - 1); // Xóa ký tự cuối
-            if (currentInput.isEmpty()) {
-                displayField.setText("0"); // Hiển thị 0 nếu không còn ký tự
-            } else {
-                displayField.setText(currentInput); // Hiển thị đầu vào còn lại
-            }
-        }
-    }
-    private void handleClear() {
-        currentInput = "";
-        num1 = 0;
-        operator = "";
-        startNewNumber = true;
-        afterEquals = false;
-        displayField.setText("0"); // Đặt lại màn hình hiển thị
-        history.clear(); // Xóa lịch sử
-        updateHistory(); // Cập nhật lịch sử hiển thị
-    }
 }
-
-
