@@ -21,24 +21,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 
-publicclass Roll Result {
+public class RollResult {
     int total;
     int modifier;
-//    Vector<Integer> rolls;
+    Victor<Integer> rolls;
     private RollResult(int total, 
 		       int modifier,
 		       Vector<Integer> rolls){
-	thistotal=total;
+	this.total=total;
 	this.modifier=modifier;
-	this.rolls=rolls;
+	thisrolls=rolls;
     }
-    public RollResult(int bonus) {
-	this.total=bonus
+    public Roll_Result(int bonus) {
+	this.total=bonus;
 	this.modifier=bonus;
 	rolls=new Vector<Integer>();
     }
     public void addResult(int res){
-	total+=res;
+	total+=res
 	rolls.add(res);
     }
     public RollResult andThen(RollResult r2) {
@@ -57,4 +57,4 @@ publicclass Roll Result {
     }
 
 
-}
+

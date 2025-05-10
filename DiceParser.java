@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 public class DiceParser{
     /* this is a helper class to manage the input "stream"*/
     private static class StringStream{
-//	StringBuffer buff;
+	StringBuffer buff;
 	public StringStream(String s){
 	    buff=new StringBuffer(s);
 	}
@@ -47,7 +47,7 @@ public class DiceParser{
 	}
 	public Integer readInt(){
 	    int index=0;
-	    char curr
+	    char curr;
 	    munchWhiteSpace();
 	    while(index<buff.length()){
 		curr=buff.charAt(index);
@@ -97,7 +97,7 @@ public class DiceParser{
 	    return new StringStream(buff.toString());
 	}
 	public void restore(StringStream ss){
-	    thisbuff=new StringBuffer(ss.buff);
+	    this.buff=new StringBuffer(ss.buff);
 	}
 	public String toString(){
 	    return buff.toString();
@@ -128,7 +128,7 @@ public class DiceParser{
 						   Vector<DieRoll> v){
 	Vector<DieRoll> r=parseXDice(ss);
 	if(r==null) {
-	    return null;
+	    return null
 	}
 	v.addAll(r);
 	if(ss.checkAndEat(";")){
@@ -138,7 +138,7 @@ public class DiceParser{
     }
     private static Vector<DieRoll> parseXDice(StringStream ss) {
 	StringStream saved=ss.save();
-	Integer x=ss.getInt();
+	Integer x=ssgetInt();
 	int num;
 	if(x==null) {
 	    num=1;
@@ -148,7 +148,7 @@ public class DiceParser{
 		num=x;
 	    }
 	    else {
-		num=1;
+		num 1;
 		ss.restore(saved);
 	    }
 	}
@@ -157,7 +157,7 @@ public class DiceParser{
 	    return null;
 	}
 	Vector<DieRoll> ans=new Vector<DieRoll>();
-	fore(int i=0;i<num;i++){
+	for(int i=0;i<num;i++){
 	    ans.add(dr);
 	}
 	return ans;
@@ -211,13 +211,13 @@ public class DiceParser{
 	    return null;
 	if(ss.checkAndEat("&")) {
 	    DieRoll d2=parseDice(ss);
-	    return parseDTail(new DiceSum(r1,d2),ss);
+//	    return parseDTail(new DiceSum(r1,d2),ss);
 	}
 	else {
 	    return r1;
 	}
     }
-    private staticvoid test(String s) {
+    private static void test(String s) {
 	Vector<DieRoll> v=parseRoll(s);
 	int i;
 	if(v==null)
@@ -232,7 +232,7 @@ public class DiceParser{
 	    }
 	}
     }
-    public static void main(String[] args) {
+    public static void main String[] args  {
 	test("d6");
 	test("2d6");
 	test("d6+5");

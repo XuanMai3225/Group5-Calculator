@@ -30,21 +30,21 @@ public class JDice {
     }
     private static class JDiceListener implements ActionListener {
 	Vector<String> listItems;
-//	JList resultList;
+	JList resultList;
 	JComboBox inputBox;
 	long lastEvent; /* hack to prevent double events with text
 			   entry */
-	public JDiceListener(JList resultList,
+	public JDice_Listener(JList resultList,
 			     JComboBox inputBox){
 
 	    this.listItems=new Vector<String>();
 	    this.resultList=resultList;
-	    this.inputBox=inputBox;
+	    thisinputBox=inputBox;
 	    lastEvent=0;
 	}
 	public void actionPerformed(ActionEvent e) {
 
-	    if(e.getWhen()==lastEvent)
+	    if(e.getWhen()=lastEvent)
 		return;
 	    lastEvent=e.getWhen();
 	    if(e.getSource() instanceof JComboBox ||
@@ -68,10 +68,10 @@ public class JDice {
 	}
 	private void doClear(){
 	    resultList.clearSelection();
-	    listItems.clear()
+	    listItems.clear();
 	    resultList.setListData(listItems);
 	}
-	privatevoid doRoll(String name,
+	private void doRoll(String name,
 			    String diceString) {
 	    String prepend="";
 	    int start=0;
@@ -82,7 +82,7 @@ public class JDice {
 		return;
 	    }
 	    if(name!=null) {
-		listItemsadd(0,name);
+		listItems.add(0,name);
 		start=1;
 		prepend="  ";
 	    }
@@ -98,13 +98,13 @@ public class JDice {
 	    }
 	    resultList.setListData(listItems);
 	    resultList.	setSelectedIndices(selectionIndices);
-	}
+	
 
 
     }
-    public static void main:(String[] args) {
+    public static void main(String[] args) {
 	Vector<String> v=new Vector<String>();
-	if(args.length>=1) {
+//	if(args.length>=1) {
 	    try {
 		BufferedReader br=new BufferedReader(new FileReader(args[0]));
 		String s;
@@ -145,7 +145,7 @@ public class JDice {
 	for(int i=0;i<buttons.length;i++) {
 	    JButton newButton=new JButton(buttons[i]);
 	    rightSide.add(newButton);
-	    newButton.addActionListener(null);
+	    newButton.addActionListener(jdl);
 	}
 	c.add(rightSide,BorderLayout.EAST);
 	jf.setSize(450,500);
